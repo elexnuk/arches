@@ -1,17 +1,22 @@
 <template>
 
-<div id="diagram" class="rounded-3xl bg-gray-100 shadow-xl p-4" v-html="(new ArchDiagram(partyList, title, compactRows)).svg">
+<div id="diagram" class="rounded-3xl bg-gray-100 shadow-xl p-4" 
+    v-html="diagram.svg">
 </div>
 
 </template>
 
 <script setup>
-import { defineProps } from "vue";
+import { defineProps, computed } from "vue";
 import { ArchDiagram } from "./../archDiagram";
 
-defineProps({
+let props = defineProps({
     "partyList": Object,
     "compactRows": Boolean,
     "title": String
+});
+
+let diagram = computed(() => {
+    return new ArchDiagram(props.partyList, props.title, props.compactRows);
 });
 </script>
