@@ -67,7 +67,6 @@
     ></PartyList>
 
     <ArchDiagram
-      v-if="list.length != 0"
       class="sm:w-full flex-1 ml-4 md:sticky md:top-0"
       :partyList="list"
       v-bind="opt"
