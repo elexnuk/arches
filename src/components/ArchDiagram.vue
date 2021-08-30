@@ -68,7 +68,7 @@
 
 <script setup>
 import { defineProps, watch, computed } from "vue";
-import { ArchDiagram } from "./../archDiagram";
+import { ArchDiagram } from "../diagram";
 
 let props = defineProps({
   partyList: Object,

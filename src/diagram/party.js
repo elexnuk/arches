@@ -1,5 +1,6 @@
 /**
  * Represents a party in a parliament diagram
+ * 
  */
 export class Party {
     /**

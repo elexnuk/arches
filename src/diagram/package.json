@@ -1,0 +1,12 @@
+{
+  "name": "@parliamentdiagram/diagram",
+  "type": "module",
+  "version": "0.0.1",
+  "description": "A JS rewrite of the diagram generating code used on the Wikipedia Parliament Diagram creator tool.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": "github:jamesm2w/parliamentdiagram",
+  "license": "GPL-2.0-or-later"
+}

@@ -81,7 +81,7 @@
 <script setup>
 import { defineProps, reactive, watch } from "vue";
 import PartyItem from "./PartyItem.vue";
-import { Party } from "./../party";
+import { Party } from "../diagram";
 
 let id = 0;
 

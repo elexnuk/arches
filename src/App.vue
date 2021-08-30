@@ -80,7 +80,7 @@ import { defineProps, reactive } from "vue";
 import PartyList from "./components/PartyList.vue";
 import ArchDiagram from "./components/ArchDiagram.vue";
 
-import { Party } from "./party";
+import { Party } from "./diagram";
 
 var list = reactive([]);
 var opt = reactive({ compactRows: false, title: "New Diagram" });
