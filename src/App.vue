@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-between items-center">
+  <div class="flex justify-between items-center flex-wrap">
     <div
       class="
         m-4
@@ -62,41 +62,56 @@
         mr-4
         divide-y divide-gray-100
       "
-      :list="list"
-      @changeStatus="statusChange"
+      v-bind="status"
     ></PartyList>
 
     <ArchDiagram
       class="sm:w-full flex-1 ml-4 md:sticky md:top-0"
-      :partyList="list"
-      v-bind="opt"
+      v-bind="status"
     ></ArchDiagram>
   </div>
 </template>
 
 <script setup>
-import { defineProps, reactive } from "vue";
+// Import needed Vue functions
+import { onMounted, reactive, watch } from "vue";
 
+// Import subcomponents 
 import PartyList from "./components/PartyList.vue";
 import ArchDiagram from "./components/ArchDiagram.vue";
 
-import { Party } from "./diagram";
+// Define a reactive object with the current diagram inside.
+// Vue will watch this object and update the DOM when it is modified
+var status = reactive({
+  list: [], // List of party representations objects (party + seat counts)
+  
+  // Any diagram options which will be passed to the diagram generator.
+  // Currently only supports a title and denseRows boolean toggle.
+  options: { denseRows: false, diagramTitle: "New Diagram" }, 
+});
 
-var list = reactive([]);
-var opt = reactive({ compactRows: false, title: "New Diagram" });
+// This defines a callback function to be run when the component is mounted onto the DOM
+// This function checks the window's localStorage for a saved state and loads it.
+onMounted(() => {
+  
+  if (localStorage.getItem("archDiagram")) {
+    console.log("load from storage");
+    let storedStatus = JSON.parse(localStorage.getItem("archDiagram"));
+    status.list = storedStatus.list;
+    status.options = storedStatus.options;
+  }
+});
 
-function statusChange(newv) {
-  opt.compactRows = newv.compact;
-  opt.title = newv.name;
-}
+// This defines a callback function to be run whenever the passed reactive variable is
+// updated. This function watches `status` for changes and updates the localStorage model
+// with the new value
+watch(status, (newValue) => {
+  console.log("update storage");
+  localStorage.setItem(
+    "archDiagram",
+    JSON.stringify({ list: newValue.list, options: newValue.options })
+  );
+});
 
-if (
-  localStorage.theme === "dark" ||
-  (!("theme" in localStorage) &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches)
-) {
-  document.documentElement.classList.add("dark");
-} else {
-  document.documentElement.classList.remove("dark");
-}
+// TODO: introduce further localStorage models? Perhaps a dark mode toggle.
 </script>

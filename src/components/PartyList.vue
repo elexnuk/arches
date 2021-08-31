@@ -1,6 +1,16 @@
 <template>
   <ul class="divide-y divide-gray-300 pb-8">
-    <div class="p-4 flex flex-wrap sticky top-0 bg-gray-50 rounded-t-lg justify-between">
+    <div
+      class="
+        p-4
+        flex flex-wrap
+        sticky
+        top-0
+        bg-gray-50
+        rounded-t-lg
+        justify-between
+      "
+    >
       <button
         class="
           flex-shrink
@@ -13,8 +23,7 @@
           hover:bg-green-300
           transition-all
           focus:ring-4
-          ring-green-700
-          ring-opacity-40
+          ring-green-700 ring-opacity-40
         "
         @click="newParty"
       >
@@ -35,9 +44,9 @@
           ring-green-700 ring-opacity-40
           transition-all
         "
-        @click="status.compact = !status.compact"
+        @click="options.denseRows = !options.denseRows"
       >
-        Compact: {{ (status.compact) ? "On" : "Off" }}
+        Compact: {{ options.denseRows ? "On" : "Off" }}
       </button>
 
       <div class="flex-shrink">
@@ -56,15 +65,16 @@
             py-3
             h-full
           "
-          
-          :value="status.name"
-          @input="status.name = $event.target.value"
+          :value="options.diagramTitle"
+          @input="options.diagramTitle = $event.target.value"
         />
       </div>
     </div>
 
-    <div v-if="list.length == 0" class="w-full h-32 ">
-      <span class="block m-auto text-center text-gray-400 text-md pt-16">Create a New Party to get started</span>
+    <div v-if="list.length == 0" class="w-full h-32">
+      <span class="block m-auto text-center text-gray-400 text-md pt-16"
+        >Create a New Party to get started</span
+      >
     </div>
 
     <PartyItem
@@ -83,32 +93,32 @@ import { defineProps, reactive, watch } from "vue";
 import PartyItem from "./PartyItem.vue";
 import { Party } from "../diagram";
 
-let id = 0;
-
-let status = reactive({compact: false, name: "New Diagram"});
-
+// Define component event emits.
+// Simple emit when the options change to change the master options.
 const emit = defineEmits(["changeStatus"]);
 
+// Define props for the component to accept the parts of the diagram list and options.
 const props = defineProps({
-  list: Object,
+  list: Array,
+  options: Object,
 });
 
-watch(status, newv => {
-  emit("changeStatus", newv);
-});
-
+// Event handler to create a new party object. 
+// Pushes party to list with intial settings and 1 seat.
 function newParty() {
   props.list.push({
-    party: new Party(id++, "New Party", "#DDDDDD", "#000000", 0),
+    party: new Party(shortid(), "New Party", "#DDDDDD", "#000000", 0),
     seatCount: 1,
   });
 }
 
+// Adds seats to to the given party (identified by ID)
 function handleSeats(event) {
   let rep = props.list.find((e) => e.party.id == event.id);
   rep.seatCount = event.seatCount;
 }
 
+// Re-arrange parties in the list order
 function moveParty(event) {
   let i = props.list.findIndex((e) => e.party.id == event.id);
   let temp;
@@ -127,9 +137,20 @@ function moveParty(event) {
   }
 }
 
+// Remove a party from the list and forget it
 function removeParty(event) {
   let i = props.list.findIndex((el) => el.party.id == event.id);
   props.list.splice(i, 1);
+}
+
+// Generate a small, relatively unique id
+// https://stackoverflow.com/a/6248722
+function shortid () {
+  let firstPart = (Math.random() * 46656) | 0;
+  let secondPart = (Math.random() * 46656) | 0;
+  firstPart = ("000" + firstPart.toString(36)).slice(-3);
+  secondPart = ("000" + secondPart.toString(36)).slice(-3);
+  return firstPart + secondPart;
 }
 </script>
 

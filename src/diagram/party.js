@@ -1,6 +1,5 @@
 /**
  * Represents a party in a parliament diagram
- * 
  */
 export class Party {
     /**
@@ -12,7 +11,7 @@ export class Party {
      * @param {string} outlineColour The outline colour of the party spot
      * @param {number} outlineWidth The outline width of the party spot
      */
-    constructor (id, name, fillColour, outlineColour, outlineWidth) {
+    constructor(id, name, fillColour, outlineColour, outlineWidth) {
         /**
          * Integer ID of the party - should be unique in the list
          * @type {number}

@@ -1,6 +1,11 @@
 import { Diagram } from "./diagram";
 import { Party } from "./party";
 
+/**
+ * @typedef {import("./diagram").PartyRepresentation} PartyRepresentation 
+ * @typedef {import("./diagram").Diagram} Diagram
+ */
+
 /** 
  * Maximum totals for each row.
  * @type {number[]} 
@@ -20,19 +25,11 @@ const totals = [
 const SVG_HEADER = name => `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 360 ${name == "" ? 185 : 205}">
 <!-- Created with the Wikimedia parliament diagram creator (http://parliamentdiagram.toolforge.org/parliamentinputform.html) -->
-<!-- Created with jamesm2w/ParliamentDiagram web application () -->
+<!-- Created with jamesm2w/ParliamentDiagram web application (https://parliament.jamesm2w.me/) -->
 <g>`;
 
 /** @type {string} */
 const SVG_FOOTER = `</g></svg>`;
-
-/**
- * @typedef PartyRepresentation
- * @type {object}
- * @property {Party} party Party object
- * @property {number} seatCount Number of seats in the diagram
- * @property {string} [position] Position of party in the diagram
- */
 
 /**
  * @typedef SeatPositions
@@ -43,25 +40,33 @@ const SVG_FOOTER = `</g></svg>`;
  */
 
 /**
+ * User options for the Arch Diagram
+ * @typedef ArchDiagramOptions
+ * @type {object}
+ * @property {string} [diagramTitle=""] Title of the diagram - defaults to no title
+ * @property {boolean} [denseRows=false] Should the diagram be compacted to save space - defaults to false.
+ */
+
+/**
  * Represents a diagram of arched rows with seats represented by a circle
  * Corresponding proportions of seats are coloured by the parties represented.
  * 
- * @param {PartyRepresentation[]} partyData List of parties and their seat counts
- * @param {string} [diagramTitle=""] Title of the diagram
- * @param {boolean} [denseRows=false] Should rows be compacted to save space
+ * @extends Diagram
  */
 export class ArchDiagram extends Diagram {
     /**
      * Creates a new arched diagram
      * @param {PartyRepresentation[]} partyData List of parties and their seat counts 
-     * @param {string} [diagramTitle=""] Title of the diagram
-     * @param {boolean} [denseRows=false] Should rows be compacted to save space
-     * 
+     * @param {ArchDiagramOptions} [options] Options to change the display of the diagram 
      */
-    constructor(partyData, diagramTitle = "", denseRows = false) {
-        super(partyData);
-        this.denseRows = denseRows;
-        this.diagramTitle = diagramTitle;
+    constructor(partyData, options) {
+        super(partyData, options);
+        this.denseRows = options.denseRows;
+        this.diagramTitle = options.diagramTitle;
+
+        this.totalSeats = 0;
+        this.rowCount = 0;
+        this.circleRadius = 0;
     }
 
     /**
@@ -69,26 +74,26 @@ export class ArchDiagram extends Diagram {
      * possible rows, but only the outermost ones. This says how much do we
      * actually need.
      * 
-     * @param {number} seatCount Number of seats in the diagram
-     * @param {number} maxRowCount Maximum number of rows needed to place as many seats
      * @returns {[number, number]} Number of innermost rows to discard, Measure of diagram fullness
      */
-    optimiseRows(seatCount, maxRowCount) {
+    optimiseRows() {
         let handledSpots = 0;
 
-        for (let i = maxRowCount; i > 0; i--) {
+        for (let i = this.rowCount; i > 0; i--) {
             // Determines the maximum number of seats in the row
             // Magic Number Math from @slashme
-            let magicNumber = 3 * maxRowCount + 4 * i - 2;
+            let magicNumber = 3 * this.rowCount + 4 * i - 2;
             let maximumSeatsInRow = Math.PI / (2 * Math.asin(2 / magicNumber));
             handledSpots += Math.trunc(maximumSeatsInRow);
 
-            if (handledSpots >= seatCount) {
+            if (handledSpots >= this.totalSeats) {
                 let wastedRows = i - 1;
-                let diagramFullness = seatCount / handledSpots;
+                let diagramFullness = this.totalSeats / handledSpots;
                 return [wastedRows, diagramFullness];
             }
         }
+
+        return [0, 0];
     }
 
     /**
@@ -96,12 +101,11 @@ export class ArchDiagram extends Diagram {
      * 
      * @param {SeatPositions[]} positions List of positions of seats
      * @param {number} seatsInRow Number of seats in the current row
-     * @param {number} circleRadius Radius of the seat circle in the diagram
      * @param {number} rowRadius Radius of the arch row
      * @returns {SeatPositions[]} Updated list of positions.
      */
-    appendSeatPositions(positions, seatsInRow, circleRadius, rowRadius) {
-        let ratio = Math.sin(circleRadius / rowRadius);
+    appendSeatPositions(positions, seatsInRow, rowRadius) {
+        let ratio = Math.sin(this.circleRadius / rowRadius);
         for (let i = 0; i < seatsInRow; i++) {
             let angle = 0;
             if (seatsInRow == 1) {
@@ -126,61 +130,54 @@ export class ArchDiagram extends Diagram {
      * Adds the current row's worth of seats into the position list.
      * 
      * @param {SeatPositions[]} positions List of seat positions
-     * @param {number} rowCount Number of rows in the diagram
      * @param {number} index Which index row this is
-     * @param {number} circleRadius Radius of seats in the diagram
      * @param {number} diagramFullness Measure of how full the diagram is
      * @returns {SeatPositions[]} Updated list of seat positions
      */
-    appendRowSeats(positions, rowCount, index, circleRadius, diagramFullness) {
-        let magicNumber = 3.0 * rowCount + 4.0 * index - 2.0
+    appendRowSeats(positions, index, diagramFullness) {
+        let magicNumber = 3.0 * this.rowCount + 4.0 * index - 2.0
         let maximumSeatsInRow = Math.PI / (2 * Math.asin(2.0 / magicNumber))
 
         // Fill the row proportionally to the "fullness" of the diagram
         let seatsInCurrentRow = Math.trunc(diagramFullness * maximumSeatsInRow)
 
         // The radius of the ith row in an N-row diagram (Ri) is (3n+4*i-2)/(4n)
-        let currentRowRadius = magicNumber / (4.0 * rowCount)
-        return this.appendSeatPositions(positions, seatsInCurrentRow, circleRadius, currentRowRadius);
+        let currentRowRadius = magicNumber / (4.0 * this.rowCount)
+        return this.appendSeatPositions(positions, seatsInCurrentRow, currentRowRadius);
     }
 
     /**
      * Adds the final leftover seats into the diagram
      * 
      * @param {SeatPositions[]} positions Positions of seats in the diagram
-     * @param {number} seatCount Number of seats in the diagram
-     * @param {number} rowCount Number of rows in the diagram
-     * @param {number} circleRadius Radius of seats in the diagram
      * @returns {SeatPositions[]} Updated list of seat positions
      */
-    appendFinalSeats(positions, seatCount, rowCount, circleRadius) {
-        let leftoverSeats = seatCount - positions.length;
-        let finalRowRadius = (7 * rowCount - 2) / (4 * rowCount);
-        return this.appendSeatPositions(positions, leftoverSeats, circleRadius, finalRowRadius);
+    appendFinalSeats(positions) {
+        let leftoverSeats = this.totalSeats - positions.length;
+        let finalRowRadius = (7 * this.rowCount - 2) / (4 * this.rowCount);
+        return this.appendSeatPositions(positions, leftoverSeats, finalRowRadius);
     }
 
     /**
      * Create a list of the centre positions of all spots in the diagram
-     * 
-     * @param {number} seatCount Number of seats in the diagram
-     * @param {number} rowCount Number of rows in the diagram
-     * @param {number} circleRadius Radius of the circles in the diagram
      * @return {SeatPositions[]}
      */
-    getSpotCentres(seatCount, rowCount, circleRadius) {
+    getSpotCentres() {
         let discardRows = 0;
         let diagramFullness = 0;
+
         if (this.denseRows) {
-            [discardRows, diagramFullness] = this.optimiseRows(seatCount, rowCount);
+            [discardRows, diagramFullness] = this.optimiseRows();
         } else {
-            diagramFullness = seatCount / totals[rowCount - 1];
+            diagramFullness = this.totalSeats / totals[this.rowCount - 1];
         }
+
         /** @type {SeatPositions[]} */
         let positions = [];
-        for (let i = discardRows + 1; i < rowCount; i++) {
-            positions = this.appendRowSeats(positions, rowCount, i, circleRadius, diagramFullness);
+        for (let i = discardRows + 1; i < this.rowCount; i++) {
+            positions = this.appendRowSeats(positions, i, diagramFullness);
         }
-        positions = this.appendFinalSeats(positions, seatCount, rowCount, circleRadius);
+        positions = this.appendFinalSeats(positions);
         // Sort descending
         positions.sort((left, right) => {
             let cmpAngle = right.angle - left.angle;
@@ -205,27 +202,27 @@ export class ArchDiagram extends Diagram {
         }
 
         /** @type {number} */
-        let totalSeats = this.partyData.reduce((total, partyRepresentation) => {
+        this.totalSeats = this.partyData.reduce((total, partyRepresentation) => {
             return { seatCount: total.seatCount + partyRepresentation.seatCount };
         }).seatCount;
 
-        if (totalSeats > 0) {
-            let rowCount = totals.findIndex(element => element >= totalSeats) + 1;
+        if (this.totalSeats > 0) {
+            this.rowCount = totals.findIndex(el => el >= this.totalSeats) + 1;
 
-            if (rowCount <= 0) {
+            if (this.rowCount <= 0) {
                 return "";
             }
 
             // Maximum radius is 0.5/rowCount but leave some space.
-            let circleRadius = 0.4 / rowCount;
-            let seatPositions = this.getSpotCentres(totalSeats, rowCount, circleRadius);
+            this.circleRadius = 0.4 / this.rowCount;
+            let seatPositions = this.getSpotCentres();
             let svgString = "";
-            svgString += SVG_HEADER(this.diagramTitle);
+            svgString += SVG_HEADER(this.options.diagramTitle);
 
             svgString +=
                 `<text x="175" y="175"
                 style="font-size:36px;font-weight:bold;text-align:center;text-anchor:middle;font-family:sans-serif;">
-                ${totalSeats}
+                ${this.totalSeats}
             </text>\n`;
 
             if (this.diagramTitle != "") {
@@ -242,14 +239,14 @@ export class ArchDiagram extends Diagram {
                 let sanitisedName = party.name.replace(/[^a-zA-Z0-9_-]+/g, "-");
                 svgString += `<g 
                     style="fill: ${party.fillColour}; 
-                    stroke-width: ${(party.outlineWidth / 100) * circleRadius * 100}; 
+                    stroke-width: ${(party.outlineWidth / 100) * this.circleRadius * 100}; 
                     stroke: ${party.outlineColour};" 
                     id="${sanitisedName}_${index}"><title>${party.name}</title>`;
 
                 for (let i = drawnSeats; i < drawnSeats + partyRepresentation.seatCount; i++) {
                     svgString += `<circle cx="${5.0 + 100.0 * seatPositions[i].x}"
                                     cy="${5.0 + 100.0 * (1.75 - seatPositions[i].y)}"
-                                    r="${circleRadius * 100.0 - (party.outlineWidth / 100) / 2.0}" />\n`;
+                                    r="${this.circleRadius * 100.0 - (party.outlineWidth / 100) / 2.0}" />\n`;
                 }
                 svgString += "</g>";
                 drawnSeats += partyRepresentation.seatCount;

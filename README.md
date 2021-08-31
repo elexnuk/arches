@@ -18,8 +18,8 @@ The application is available at [parliament.jamesm2w.me](https://parliament.jame
 
 1. Download source from the github repository
 2. Install dependencies with `npm install`
-3. Edit code in your favourite editor. 
-4. Run development copy with `npm run dev`
+3. Launch development server with `npm run dev`
+4. Edit code. The development server should watch for any file changes and update the site.
 
 ## Dependencies
 
