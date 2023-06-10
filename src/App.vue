@@ -1,6 +1,6 @@
 <template>
   <div class="flex justify-between items-center flex-wrap">
-    <div
+    <!-- <div
       class="
         m-4
         mb-0
@@ -17,11 +17,13 @@
         Parliament <br />
         Diagram
       </h1>
-    </div>
+    </div> -->
+    <h1 class="text-5xl font-mono font-black text-gradient text-transparent bg-clip-text m-4 mb-0 p-2 mt-3">
+        Arches<br>
+        <span class="text-3xl inline-block relative -top-5 font-semibold font-sans italic"><a href="https://elexn.uk/" target="_blank">elexn.uk</a></span><br>
+    </h1>
 
     <div class="text-gray-400 mr-4 text-right">
-      Written by
-      <a target="_blank" href="https://jamesm2w.me/dev/">jamesm2w</a> <br />
       Based on the
       <a
         class="text-blue-700 underline"
@@ -40,13 +42,8 @@
       <a
         class="underline text-blue-700"
         target="_blank"
-        href="https://github.com/jamesm2w/parliamentdiagram"
+        href="https://github.com/elexnuk/arches"
         >Github</a
-      >. Code licensed under
-      <a
-        class="underline text-blue-700"
-        href="https://raw.githubusercontent.com/jamesm2w/parliamentdiagram/main/LICENSE.md"
-        >GPL v2</a
       >.
     </div>
   </div>
@@ -115,3 +112,29 @@ watch(status, (newValue) => {
 
 // TODO: introduce further localStorage models? Perhaps a dark mode toggle.
 </script>
+<style scoped>
+.text-gradient {
+    background-image: linear-gradient(
+        -90deg,
+        #8DC63F,
+        #E4003B,
+        #FAA61A,
+        #0087DC
+    );
+    background-size: 400% 400%;
+    animation: bg-gradient 10s ease infinite;
+}
+
+@keyframes bg-gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+</style>
