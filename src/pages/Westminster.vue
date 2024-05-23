@@ -14,7 +14,7 @@
     list: [], // List of party representations objects (party + seat counts)
     
     // Any diagram options which will be passed to the diagram generator.
-    options: { wingrows: 0, centercols: 0, radius: 1, spacing: 0.5, cozy: true, fullwidth: false }, 
+    options: { wingrows: 0, centercols: 0, radius: 1, spacing: 0.1, cozy: true, fullwidth: false }, 
   });
   
   // This defines a callback function to be run when the component is mounted onto the DOM
