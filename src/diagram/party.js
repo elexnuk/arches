@@ -10,8 +10,9 @@ export class Party {
      * @param {string} fillColour The fill colour of the party spot
      * @param {string} outlineColour The outline colour of the party spot
      * @param {number} outlineWidth The outline width of the party spot
+     * @param {string} position The position of the party in the diagram (left, right, center, head)
      */
-    constructor(id, name, fillColour, outlineColour, outlineWidth) {
+    constructor(id, name = "New Party", fillColour = "#DDDDDD", outlineColour = "#000000", outlineWidth = 0, position = "left") {
         /**
          * Integer ID of the party - should be unique in the list
          * @type {number}
@@ -37,5 +38,10 @@ export class Party {
          * @type {number}
          */
         this.outlineWidth = outlineWidth;
+        /**
+         * Position of the party in the diagram. left, right, center, head
+         * @type {string}
+         */
+        this.position = position;
     }
 }
